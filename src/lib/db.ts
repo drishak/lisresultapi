@@ -1,9 +1,9 @@
 import mysql from "mysql2/promise";
 
 export const pool = mysql.createPool({
-    host: "zvvzm.h.filess.io",
-    user: "RMIS_statement",
-    password: "ffe21a359eb878ed3d4c1135dc899d4d53fa7f82",
-    database: "RMIS_statement",
+    host: "192.168.151.190",
+    user: "root",
+    password: "rootpass",
+    database: "iirt",
     port: 3306,
 });
