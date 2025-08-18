@@ -1,6 +1,6 @@
 // app/api/uploadBase64Pdf/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import {pool} from "db/pool";
+import { pool } from "@/lib/db";
 
 
 const corsHeaders = {
@@ -35,20 +35,20 @@ export async function POST(request: NextRequest) {
     console.log("Received runmaster body:", runmaster);
 
 
-  const sql_sp = `CALL clinical_note_getbyencounter(?,?,?)`;
+    const sql_sp = `CALL clinical_note_getbyencounter(?,?,?)`;
     const userid: string = body.userid;
     const patientid: number = body.patientid;
     const encounterid: number = body.encounterid;
-    const data = [userid, patientid, encounterid];    
+    const data = [userid, patientid, encounterid];
     //console.error("Ni dalam new api");
     // Execute a query
     const results: any[] = await pool.query(sql_sp, data);
-    if(results[0].length>0){
-      return respond.status(200).json(results[0]);
-    }else{
-      return respond.status(200).json({message: "tiada data"});
-    }
-    
+    // if (results[0].length > 0) {
+    //   return respond.status(200).json(results[0]);
+    // } else {
+    //   return respond.status(200).json({ message: "tiada data" });
+    // }
+
 
 
 
