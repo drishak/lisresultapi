@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
         let range = null;
 
         if (patientData[0].gender === "M") {
-            range = "1-15mm/hr";
+            range = "1-15";
         } else if (patientData[0].gender === "F") {
-            range = "1-20mm/hr";
+            range = "1-20";
         }
 
         if (macData.length > 0) {
@@ -108,21 +108,22 @@ export async function POST(request: NextRequest) {
             for (const data of macData) {
 
                 await pool.query(
-                    "INSERT INTO analyzer_result_det (analyzer_result_id, test_code, test_desc, data_result, data_reading, normal_range) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO analyzer_result_det (analyzer_result_id, test_code, test_desc, data_result, data_reading, normal_range, unit) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     [
                         analyzerResultId,
                         data.analyzer_test_id,
                         data.analyzer_test_full_desc,
                         data.data_result,
                         data.data_reading,
-                        range
+                        range,
+                        "mm/hr"
                     ]
                 );
 
                 await conn.execute(
                     `INSERT INTO ANALYZER_RESULT_DET 
-                            (analyzer_result_id, test_code, test_desc, data_result, data_reading, normal_range) 
-                        VALUES (:analyzer_result_id, :test_code, :test_desc, :data_result, :data_reading, :normal_range)`,
+                            (analyzer_result_id, test_code, test_desc, data_result, data_reading, normal_range, unit) 
+                        VALUES (:analyzer_result_id, :test_code, :test_desc, :data_result, :data_reading, :normal_range, :unit)`,
                     {
                         analyzer_result_id: analyzerOcrResultId,
                         test_code: data.analyzer_test_id,
@@ -130,6 +131,7 @@ export async function POST(request: NextRequest) {
                         data_result: data.data_result,
                         data_reading: data.data_reading,
                         normal_range: range,
+                        unit: "mm/hr"
                     },
                     { autoCommit: true }
                 );
