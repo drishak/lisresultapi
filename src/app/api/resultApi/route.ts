@@ -50,10 +50,12 @@ export async function POST(request: NextRequest) {
 
         let range = null;
 
-        if (patientData[0].gender === "L") {
-            range = "1-15";
-        } else if (patientData[0].gender === "P") {
-            range = "1-20";
+        if (patientData.length > 0 && patientData) {
+            if (patientData[0].gender === "L") {
+                range = "1-15";
+            } else if (patientData[0].gender === "P") {
+                range = "1-20";
+            }
         }
 
         if (macData.length > 0) {
