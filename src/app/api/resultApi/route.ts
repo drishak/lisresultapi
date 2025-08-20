@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
             analyzerResultId = insertResult.insertId;
 
             const insertOrcResult = await conn.execute(
-                `INSERT INTO ANALYZER_RESULT 
+                `INSERT INTO MID002ANALYZER_RESULT 
                         (insert_date, insert_by, specimen_id, patient_id, patient_name, dob, gender, request_date, run_date, equipment_full_desc, request_id_lis)
                     VALUES (:insert_date, :insert_by, :specimen_id, :patient_id, :patient_name, :dob, :gender, :request_date, :run_date, :equipment_full_desc, :request_id_lis)
                     RETURNING ANALYZER_RESULT_ID INTO :out_id`,
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
                 );
 
                 await conn.execute(
-                    `INSERT INTO ANALYZER_RESULT_DET 
+                    `INSERT INTO MID003ANALYZER_RESULT_DET 
                             (analyzer_result_id, test_code, test_desc, data_result, data_reading, range, unit) 
                         VALUES (:analyzer_result_id, :test_code, :test_desc, :data_result, :data_reading, :range, :unit)`,
                     {
