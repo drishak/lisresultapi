@@ -124,15 +124,15 @@ export async function POST(request: NextRequest) {
 
                 await conn.execute(
                     `INSERT INTO ANALYZER_RESULT_DET 
-                            (analyzer_result_id, test_code, test_desc, data_result, data_reading, normal_range, unit) 
-                        VALUES (:analyzer_result_id, :test_code, :test_desc, :data_result, :data_reading, :normal_range, :unit)`,
+                            (analyzer_result_id, test_code, test_desc, data_result, data_reading, range, unit) 
+                        VALUES (:analyzer_result_id, :test_code, :test_desc, :data_result, :data_reading, :range, :unit)`,
                     {
                         analyzer_result_id: analyzerOcrResultId,
                         test_code: data.analyzer_test_id,
                         test_desc: data.analyzer_test_full_desc,
                         data_result: data.data_result,
                         data_reading: data.data_reading,
-                        normal_range: range,
+                        range: range,
                         unit: "mm/hr"
                     },
                     { autoCommit: true }
