@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "dotenv": "^17.2.1",
+    "express": "^5.1.0",
     "mysql2": "^3.14.3",
     "next": "15.4.5",
+    "odbc": "^2.4.9",
     "oracledb": "^6.9.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
