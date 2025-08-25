@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import oracledb from "oracledb";
 
@@ -5,17 +6,18 @@ export async function GET() {
     try {
         // Point to your Instant Client directory
         oracledb.initOracleClient({ libDir: "C:\\oracle\\instantclient_19_23" });
-        // Linux: oracledb.initOracleClient({ libDir: "/opt/oracle/instantclient_19_23" });
+        // oracledb.initOracleClient({ libDir: undefined });
 
-        // Connect to Oracle
         const connection = await oracledb.getConnection({
             user: "gev",
             password: "gev2025!",
-            connectString: "192.168.199.227:1521:his"  // adjust host, port, and service/SID
+            connectString: "192.168.199.227:1521/his"
+            // user: "system",
+            // password: "MyPassword123",
+            // connectString: "192.168.151.190:1521/FREEPDB1",
         });
 
-        // Run a test query
-        const result = await connection.execute("SELECT sysdate FROM dual");
+        const result = await connection.execute("SELECT * FROM HIS.MID002ANALYZER_RESULT");
 
         await connection.close();
 

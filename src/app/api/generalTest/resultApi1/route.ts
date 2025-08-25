@@ -3,15 +3,15 @@ import { pool } from "@/lib/db";
 import { getOracleConnection } from "@/lib/oracledb";
 import oracledb from "oracledb";
 
-export async function POST(request: NextRequest) {
+export async function handleResultApi(data: any) {
     let conn;
 
     try {
 
         conn = await getOracleConnection();
         // get query params
-        const item = await request.json();
-        const specimenId = item.specimen_id;
+        const item = data
+        const specimenId = item.lab_no;
 
         if (!specimenId) {
             return NextResponse.json(
@@ -183,6 +183,8 @@ export async function POST(request: NextRequest) {
                 { status: 404 }
             );
         }
+
+        await conn.close();
 
         return NextResponse.json(
             {

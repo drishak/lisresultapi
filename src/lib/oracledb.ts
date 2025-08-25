@@ -1,13 +1,15 @@
 import oracledb from "oracledb";
 
 export async function getOracleConnection() {
+    oracledb.initOracleClient({ libDir: "C:\\oracle\\instantclient_19_23" });
+
     const connection = await oracledb.getConnection({
         // user: "system",
         // password: "MyPassword123",
         // connectString: "192.168.151.190:1521/FREEPDB1",
         user: "gev",
         password: "gev2025!",
-        connectString: "192.168.199.227:1521:his",
+        connectString: "192.168.199.227:1521/his",
     });
 
     // Set schema for this session
