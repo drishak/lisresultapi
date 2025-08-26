@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["oracledb"],
-  },
+const nextConfig = {
+  serverExternalPackages: ["oracledb", "better-sqlite3"],
 };
+
 
 export default nextConfig;

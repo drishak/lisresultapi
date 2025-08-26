@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { handleResultApi } from "../generalTest/resultApi1/route";
+import { handleResultfbc } from "../hematology/resultApi1/route";
 
 export async function POST(request: NextRequest) {
 
 
     try {
-
         const item = await request.json();
         const specimenId = item.specimen_id;
-        let result: any = {};
 
         if (!specimenId) {
             return NextResponse.json(
                 { status: "error", message: "specimen_id is required" },
-                { status: 500 }
+                { status: 400 }
             );
         }
 
@@ -23,38 +22,29 @@ export async function POST(request: NextRequest) {
             [specimenId]
         );
 
-        console.log("Request Det Data:", requestdetData);
-
         if (!requestdetData || requestdetData.length === 0) {
-
             return NextResponse.json(
                 { status: "error", message: "No data found for the given specimen_id" },
                 { status: 404 }
             );
+        }
 
-        } else {
+        let results: any[] = [];
 
-            for (const det of requestdetData) {
+        for (const det of requestdetData) {
+            let testCode = det.test_code;
 
-                let testCode = det.test_code;
-
-                if (testCode === "ESR") {
-
-                    //general api handler
-                    result = await handleResultApi(det);
-
-                } else {
-
-                    //add other test code handlers here
-
-                }
+            if (testCode === "HEMA32") {
+                const res = await handleResultApi(det);
+                results.push({ testCode, result: res });
+            } else if (testCode === "HEMA21") {
+                // const res = await handleResultFBC(det);
+                // results.push({ testCode, result: res });
             }
         }
 
         return NextResponse.json(
-            {
-                message: "Created successfully",
-            },
+            { status: "success", message: "Results processed", data: results },
             { status: 200 }
         );
 
