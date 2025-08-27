@@ -3,15 +3,15 @@ import { pool } from "@/lib/db";
 import { getOracleConnection } from "@/lib/oracledb";
 import oracledb from "oracledb";
 
-export async function POST(request: NextRequest) {
+export async function handleResultApi(data: any) {
     let conn;
 
     try {
 
         conn = await getOracleConnection();
         // get query params
-        const item = await request.json();
-        const specimenId = item.specimen_id;
+        const item = data
+        const specimenId = item.lab_no;
 
         if (!specimenId) {
             return NextResponse.json(
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
             for (const data of macData) {
 
                 await pool.query(
-                    "INSERT INTO analyzer_result_det (analyzer_result_id, test_code, test_desc, data_result, data_reading, normal_range, unit) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO analyzer_result_det (analyzer_result_id, result_item_code, result_item_desc, data_result, data_reading, normal_range, unit) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     [
                         analyzerResultId,
                         data.analyzer_test_id,
@@ -183,6 +183,8 @@ export async function POST(request: NextRequest) {
                 { status: 404 }
             );
         }
+
+        await conn.close();
 
         return NextResponse.json(
             {
