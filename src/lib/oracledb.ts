@@ -1,7 +1,7 @@
 import oracledb from "oracledb";
 
 export async function getOracleConnection() {
-    oracledb.initOracleClient({ libDir: "C:\\oracle\\instantclient_19_23" });
+    oracledb.initOracleClient({ libDir: "/opt/oracle/instantclient_19_28" });
 
     const connection = await oracledb.getConnection({
         // user: "system",
