@@ -256,12 +256,11 @@ export async function handleResultfbc(data: any) {
                         result_item_code, 
                         result_item_desc, 
                         data_result, 
-                        data_reading, 
                         normal_range, 
                         unit, 
                         abnormality
                         ) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     `,
                     [
                         analyzerResultId,
@@ -269,7 +268,6 @@ export async function handleResultfbc(data: any) {
                         detlist?.result_item_code,
                         detlist?.result_item_desc,
                         result,
-                        macInData[0][0]?.data_reading,
                         normalRange,
                         row[0][0]?.range_uom_code,
                         abnormality
@@ -278,7 +276,7 @@ export async function handleResultfbc(data: any) {
 
                 await conn.execute(
                     `INSERT INTO MID003ANALYZER_RESULT_DET 
-                                                            (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, data_reading, range, unit, abnormality, critical_value, data_value1, data_value2, test_code, test_desc) 
+                                                            (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
                                                         VALUES (
                                 
                                                         ANALYZER_RESULT_DET_SEQ.NEXTVAL,
@@ -287,13 +285,9 @@ export async function handleResultfbc(data: any) {
                                                         :result_item_code, 
                                                         :result_item_desc, 
                                                         :data_result, 
-                                                        :data_reading, 
                                                         :range, 
                                                         :unit, 
                                                         :abnormality, 
-                                                        :critical_value, 
-                                                        :data_value1, 
-                                                        :data_value2,
                                                         :test_code,
                                                         :test_desc
                                                         )
@@ -305,13 +299,9 @@ export async function handleResultfbc(data: any) {
                         result_item_code: detlist?.result_item_code,
                         result_item_desc: detlist?.result_item_desc,
                         data_result: result,
-                        data_reading: macInData[0][0]?.data_reading,
                         range: normalRange,
                         unit: row[0][0]?.range_uom_code,
                         abnormality: abnormality,
-                        critical_value: "no",
-                        data_value1: "0",
-                        data_value2: "0",
                         test_code: requestdetData[0]?.test_code,
                         test_desc: requestdetData[0]?.test_desc,
 
