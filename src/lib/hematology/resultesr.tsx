@@ -117,7 +117,7 @@ export async function handleResultesr(data: any) {
                 )
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
-                    new Date(new Date().getTime() + 8 * 60 * 60 * 1000),
+                    new Date(),
                     "SYSAPI",
                     specimenId,
                     patientData.length > 0 && patientData ? patientData[0]?.patient_id_no : null,
@@ -156,7 +156,7 @@ export async function handleResultesr(data: any) {
                     )
                     RETURNING ANALYZER_RESULT_ID INTO :out_id`,
                 {
-                    insert_date: new Date(new Date().getTime() + 8 * 60 * 60 * 1000),
+                    insert_date: new Date(),
                     insert_by: "SYSAPI",
                     specimen_id: specimenId,
                     patient_id: patientData.length > 0 && patientData ? patientData[0]?.patient_id_no : null,
@@ -227,7 +227,7 @@ export async function handleResultesr(data: any) {
                 const max = row[0][0]?.verify_max_range;
                 const result = macInData[0][0]?.data_result;
 
-                const normalRange = (min != null && max != null) ? `${min} - ${max}` : "-----";
+                const normalRange = (min != null && max != null) ? `${min} - ${max}` : null;
 
                 let abnormality = null;
                 if (row.length > 0 && macInData.length > 0) {
@@ -238,10 +238,10 @@ export async function handleResultesr(data: any) {
                     } else if (parseFloat(result) < parseFloat(min)) {
                         abnormality = "Low";
                     } else {
-                        abnormality = "-----";
+                        abnormality = null;
                     }
                 } else {
-                    abnormality = "-----";
+                    abnormality = null;
                 }
 
 

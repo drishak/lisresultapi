@@ -3,7 +3,7 @@ import { pool } from "@/lib/db";
 import { getOracleConnection } from "@/lib/oracledb";
 import oracledb from "oracledb";
 
-export async function handleResultfbc(data: any) {
+export async function handleResultOsmo(data: any) {
     let conn;
 
     try {
@@ -196,34 +196,31 @@ export async function handleResultfbc(data: any) {
 
                 if (macInData.length > 0) {
 
-                    const [refProductData]: any = await pool.query(
-                        "SELECT * FROM ref_product WHERE result_item_code = ?",
-                        [testCodedet]
-                    );
+                    // const [refProductData]: any = await pool.query(
+                    //     "SELECT * FROM ref_product WHERE result_item_code = ?",
+                    //     [testCodedet]
+                    // );
 
-                    const rprRefProductId = refProductData[0].ref_product_id;
+                    //hardcode ESR ref_product_id
+                    // const rprRefProductId = "298";
 
-                    if (rprRefProductId) {
-
-                        row = await pool.query(
-                            `
-                            SELECT verify_min_range,
+                    row = await pool.query(
+                        `
+                            SELECT 
+                                verify_min_range,
                                 verify_max_range,
                                 range_uom_code
                             FROM vw_product_ranges
                             WHERE ref_product_id = ?
-                            AND rpr_ref_product_id = ?
-                            AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
-                            AND ? BETWEEN min_age_days AND max_age_days
+                                AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
+                                AND (? BETWEEN min_age_days AND max_age_days OR (min_age_days IS NULL AND max_age_days IS NULL))
                             limit 1
                             `,
-                            [refProductId, rprRefProductId, gender, gender, ageDays]
-                        );
+                        [refProductId, gender, gender, ageDays]
+                    );
 
-                        console.log("Condition Range:", refProductId, rprRefProductId, gender, ageDays);
-                        console.log("Range Data:", testCodeRef, refProductId, row);
-
-                    }
+                    console.log("Condition Range:", refProductId, gender, ageDays);
+                    console.log("Range Data:", testCodeRef, refProductId, row);
                 }
 
                 const min = row[0][0]?.verify_min_range;
@@ -276,22 +273,22 @@ export async function handleResultfbc(data: any) {
 
                 await conn.execute(
                     `INSERT INTO MID003ANALYZER_RESULT_DET 
-                                                            (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
-                                                        VALUES (
-                                
-                                                        ANALYZER_RESULT_DET_SEQ.NEXTVAL,
-                                                        :analyzer_result_id, 
-                                                        :result_item_id,
-                                                        :result_item_code, 
-                                                        :result_item_desc, 
-                                                        :data_result, 
-                                                        :range, 
-                                                        :unit, 
-                                                        :abnormality, 
-                                                        :test_code,
-                                                        :test_desc
-                                                        )
-                                                        RETURNING ANALYZER_RESULT_DET_ID INTO :out_id`,
+                                            (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
+                                        VALUES (
+                
+                                        ANALYZER_RESULT_DET_SEQ.NEXTVAL,
+                                        :analyzer_result_id, 
+                                        :result_item_id,
+                                        :result_item_code, 
+                                        :result_item_desc, 
+                                        :data_result, 
+                                        :range, 
+                                        :unit, 
+                                        :abnormality, 
+                                        :test_code,
+                                        :test_desc
+                                        )
+                                        RETURNING ANALYZER_RESULT_DET_ID INTO :out_id`,
                     {
 
                         analyzer_result_id: analyzerOcrResultId,
@@ -316,7 +313,7 @@ export async function handleResultfbc(data: any) {
 
         return;
     } catch (error: any) {
-        console.error("Error in handleResultfbc:", error);
+        console.error("Error in handleResultesr:", error);
         return NextResponse.json(
             { status: "error", message: error.message },
             { status: 500 }

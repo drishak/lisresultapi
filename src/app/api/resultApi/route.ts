@@ -4,6 +4,7 @@ import { handleResultApi } from "@/lib/general/resultApi1";
 import { handleResultfbc } from "@/lib/hematology/resultfbc";
 import { handleResultesr } from "@/lib/hematology/resultesr";
 import { handleResultStago } from "@/lib/hematology/resultStago";
+import { handleResultOsmo } from "@/lib/patology/resultOsmo";
 
 export async function POST(request: NextRequest) {
 
@@ -36,23 +37,34 @@ export async function POST(request: NextRequest) {
         for (const det of requestdetData) {
             let testCode = det.test_code;
 
+            // JOKOH
             if (testCode === "HEMA32") {
                 const res = await handleResultesr(det);
                 results.push({ testCode, result: res });
-            } else if (testCode === "HEMA19" || testCode === "HEMA20" || testCode === "HEMA21" || testCode === "HEMA22") {
+            }
+
+            // SYSMEX
+            else if (testCode === "HEMA19" || testCode === "HEMA20" || testCode === "HEMA21" || testCode === "HEMA22") {
                 const res = await handleResultfbc(det);
                 results.push({ testCode, result: res });
             }
-            // else if (testCode === "HEMA1" || testCode === "HEMA2" || testCode === "HEMA6" || testCode === "HEMA8" || testCode === "HEMA9" || testCode === "HEMA27") {
-            //     const res = await handleResultStago(det);
-            //     results.push({ testCode, result: res });
-            // }
+            // STAGO
+            else if (testCode === "HEMA1" || testCode === "HEMA2" || testCode === "HEMA6" || testCode === "HEMA8" || testCode === "HEMA9" || testCode === "HEMA27") {
+                const res = await handleResultStago(det);
+                results.push({ testCode, result: res });
+            }
+            // OSMO
+            else if (testCode === "UPK43" || testCode === "UPK51") {
+                const res = await handleResultOsmo(det);
+                results.push({ testCode, result: res });
+            }
+
+            return NextResponse.json(
+                { status: "success", message: "Results processed", data: results },
+                { status: 200 }
+            );
         }
 
-        return NextResponse.json(
-            { status: "success", message: "Results processed", data: results },
-            { status: 200 }
-        );
 
     } catch (error: any) {
         return NextResponse.json(
