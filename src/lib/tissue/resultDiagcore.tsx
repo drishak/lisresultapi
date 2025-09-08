@@ -3,7 +3,7 @@ import { pool } from "@/lib/db";
 import { getOracleConnection } from "@/lib/oracledb";
 import oracledb from "oracledb";
 
-export async function handleResultBiosensor(data: any) {
+export async function handleResultDiagcore(data: any) {
     let conn;
 
     try {
@@ -202,7 +202,20 @@ export async function handleResultBiosensor(data: any) {
                     [testCodeRef, specimenId]
                 );
 
-                const result = macInData[0][0]?.data_result;
+                let result = macInData[0][0]?.data_result;
+                console.log("Result:", testCodeRef, result);
+
+                if (!result || result === undefined) {
+                    continue;
+                } else {
+                    if (result === 'POSITIVE') {
+                        result = 'DETECTED'
+                    } else if (result === 'NEGATIVE') {
+                        result = 'NOT DETECTED'
+                    }
+                }
+
+                console.log(" New Result:", testCodeRef, result);
 
                 await pool.query(
                     `INSERT INTO analyzer_result_det (
@@ -233,7 +246,7 @@ export async function handleResultBiosensor(data: any) {
                     `INSERT INTO MID003ANALYZER_RESULT_DET 
                                             (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
                                         VALUES (
-                
+
                                         ANALYZER_RESULT_DET_SEQ.NEXTVAL,
                                         :analyzer_result_id, 
                                         :result_item_id,
@@ -274,7 +287,7 @@ export async function handleResultBiosensor(data: any) {
             status: "success"
         };
     } catch (error: any) {
-        console.error("Error in handleResultBiosensor:", error);
-        throw new Error(error.message || "Failed to handle Biosensor result");
+        console.error("Error in handleResultDiagcore:", error);
+        throw new Error(error.message || "Failed to handle Diagcore result");
     }
 }

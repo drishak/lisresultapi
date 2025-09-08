@@ -6,8 +6,9 @@ import { handleResultesr } from "@/lib/hematology/resultesr";
 import { handleResultStago } from "@/lib/hematology/resultStago";
 import { handleResultOsmo } from "@/lib/patology/resultOsmo";
 import { handleResultUrit } from "@/lib/patology/resultUrit";
-import { handleResultSerbia } from "@/lib/patology/resultSerbia";
+import { handleResultSebia } from "@/lib/patology/resultSebia";
 import { handleResultBiosensor } from "@/lib/tissue/resultBiosensor";
+import { handleResultDiagcore } from "@/lib/tissue/resultDiagcore";
 
 export async function POST(request: NextRequest) {
 
@@ -47,8 +48,9 @@ export async function POST(request: NextRequest) {
                 else if (["HEMA1", "HEMA2", "HEMA6", "HEMA8", "HEMA9", "HEMA27"].includes(testCode)) res = await handleResultStago(det);
                 else if (["UPK43", "UPK51"].includes(testCode)) res = await handleResultOsmo(det);
                 else if (testCode === "UPK69") res = await handleResultUrit(det);
-                else if (testCode === "UPK63") res = await handleResultSerbia(det);
+                else if (testCode === "UPK63") res = await handleResultSebia(det);
                 else if (["UKT01"].includes(testCode)) res = await handleResultBiosensor(det);
+                else if (["UKT04", "UKT05"].includes(testCode)) res = await handleResultDiagcore(det);
 
                 results.push({
                     specimenId: specimenId,
@@ -59,13 +61,12 @@ export async function POST(request: NextRequest) {
             } catch (error: any) {
                 results.push({ testCode: testCode, error: error.message, status: "failed" });
             }
-
-            return NextResponse.json(
-                { status: results.every(r => r.status === "success") ? "success" : "partial", data: results },
-                { status: results.every(r => r.status === "success") ? 200 : 404 }
-            );
-
         }
+
+        return NextResponse.json(
+            { status: results.every(r => r.status === "success") ? "success" : "partial", data: results },
+            { status: results.every(r => r.status === "success") ? 200 : 404 }
+        );
     } catch (error: any) {
         return NextResponse.json(
             { status: "error", message: error.message },
