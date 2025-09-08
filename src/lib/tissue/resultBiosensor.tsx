@@ -3,7 +3,7 @@ import { pool } from "@/lib/db";
 import { getOracleConnection } from "@/lib/oracledb";
 import oracledb from "oracledb";
 
-export async function handleResultStago(data: any) {
+export async function handleResultBiosensor(data: any) {
     let conn;
 
     try {
@@ -77,36 +77,15 @@ export async function handleResultStago(data: any) {
             let row: any[] = [];
 
             for (const det of requestdetlistData) {
-
-                let resultItemCode = det.result_item_code;
-                let resultItemDesc = det.result_item_desc;
-                let testCodeRef = null;
-
-                if (!resultItemDesc) {
-                    continue;
-                } else {
-                    if (resultItemDesc === "Prothrombin Time") {
-                        testCodeRef = "PTs"
-                    } else if (resultItemDesc === "Activated Partial Thromboplastin Time") {
-                        testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "Disseminated Intravascular Coagulation") {
-                        // testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "Thrombin Time") {
-                        // testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "Fibrinogen") {
-                        // testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "D-Dimer") {
-                        // testCodeRef = "PTTAAUTOs"
-                    }
-                }
+                const resultItemCode = det.result_item_code;
 
                 // get ref product
-                // const [refProductData]: any = await pool.query(
-                //     "SELECT * FROM ref_product WHERE result_item_code = ?",
-                //     [resultItemCode]
-                // );
+                const [refProductData]: any = await pool.query(
+                    "SELECT * FROM ref_product WHERE result_item_code = ?",
+                    [resultItemCode]
+                );
 
-                // const testCodeRef = refProductData[0]?.test_code;
+                const testCodeRef = refProductData[0]?.test_code;
 
                 // get mac data
                 const [rows]: any = await pool.query(
@@ -117,6 +96,12 @@ export async function handleResultStago(data: any) {
                 if (rows.length > 0) {
                     macData = rows;
                     break; // stop looping
+                } else {
+                    // throw new Error(`No MAC data found for test code ${specimenId}`);
+                    return {
+                        status: "no_result",
+                        message: `No MAC data found for specimen_id : ${specimenId}`,
+                    }
                 }
             }
 
@@ -206,18 +191,7 @@ export async function handleResultStago(data: any) {
 
             for (const detlist of requestdetlistData) {
 
-                let resultItemCode = null;
-                let resultItemDesc = detlist.result_item_desc;
-
-                if (!resultItemDesc) {
-                    continue;
-                } else {
-                    if (resultItemDesc === "Prothrombin Time") {
-                        resultItemCode = "PT2"
-                    } else if (resultItemDesc === "Activated Partial Thromboplastin Time") {
-                        resultItemCode = "APTT2"
-                    }
-                }
+                const resultItemCode = detlist.result_item_code;
 
                 const [refProductData]: any = await pool.query(
                     "SELECT * FROM ref_product WHERE result_item_code = ?",
@@ -239,16 +213,19 @@ export async function handleResultStago(data: any) {
                     //     [testCodedet]
                     // );
 
-                    // const rprRefProductId = refProductData[0].ref_product_id;
+                    //hardcode ESR ref_product_id
+                    // const rprRefProductId = "298";
 
                     row = await pool.query(
                         `
-                            SELECT verify_min_range,
+                            SELECT 
+                                verify_min_range,
                                 verify_max_range,
                                 range_uom_code
                             FROM vw_product_ranges
                             WHERE ref_product_id = ?
-                            AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
+                                AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
+                                AND (? BETWEEN min_age_days AND max_age_days OR (min_age_days IS NULL AND max_age_days IS NULL))
                             limit 1
                             `,
                         [refProductId, gender, gender, ageDays]
@@ -256,7 +233,6 @@ export async function handleResultStago(data: any) {
 
                     console.log("Condition Range:", refProductId, gender, ageDays);
                     console.log("Range Data:", testCodeRef, refProductId, row);
-
                 }
 
                 const min = row[0][0]?.verify_min_range;
@@ -309,23 +285,22 @@ export async function handleResultStago(data: any) {
 
                 await conn.execute(
                     `INSERT INTO MID003ANALYZER_RESULT_DET 
-                        (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
-                    VALUES (
-                                
-                        ANALYZER_RESULT_DET_SEQ.NEXTVAL,
-                        :analyzer_result_id,
-                        :result_item_id,
-                        :result_item_code, 
-                        :result_item_desc, 
-                        :data_result, 
-                        :range, 
-                        :unit, 
-                        :abnormality,
-                        :test_code,
-                        :test_desc
-
-                        )
-                        RETURNING ANALYZER_RESULT_DET_ID INTO :out_id`,
+                                            (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
+                                        VALUES (
+                
+                                        ANALYZER_RESULT_DET_SEQ.NEXTVAL,
+                                        :analyzer_result_id, 
+                                        :result_item_id,
+                                        :result_item_code, 
+                                        :result_item_desc, 
+                                        :data_result, 
+                                        :range, 
+                                        :unit, 
+                                        :abnormality, 
+                                        :test_code,
+                                        :test_desc
+                                        )
+                                        RETURNING ANALYZER_RESULT_DET_ID INTO :out_id`,
                     {
 
                         analyzer_result_id: analyzerOcrResultId,
@@ -348,12 +323,12 @@ export async function handleResultStago(data: any) {
         }
 
 
-        return;
+        return {
+            specimenId,
+            status: "success"
+        };
     } catch (error: any) {
-        console.error("Error in handleResultstago:", error);
-        return NextResponse.json(
-            { status: "error", message: error.message },
-            { status: 500 }
-        );
+        console.error("Error in handleResultesr:", error);
+        throw new Error(error.message || "Failed to handle ESR result");
     }
 }

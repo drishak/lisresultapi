@@ -96,6 +96,12 @@ export async function handleResultesr(data: any) {
                 if (rows.length > 0) {
                     macData = rows;
                     break; // stop looping
+                } else {
+                    // throw new Error(`No MAC data found for test code ${specimenId}`);
+                    return {
+                        status: "no_result",
+                        message: `No MAC data found for specimen_id : ${specimenId}`,
+                    }
                 }
             }
 
@@ -176,6 +182,12 @@ export async function handleResultesr(data: any) {
             );
 
             analyzerOcrResultId = (insertOrcResult.outBinds as { out_id: any[] }).out_id[0];
+
+            //Update status and run date in request_det
+            await pool.execute(
+                "UPDATE request_det SET status = ?, run_date = ? WHERE request_det_id = ?",
+                ["TST", macData[0]?.collect_date, reqdetid]
+            );
 
             for (const detlist of requestdetlistData) {
 
@@ -311,12 +323,12 @@ export async function handleResultesr(data: any) {
         }
 
 
-        return;
+        return {
+            specimenId,
+            status: "success"
+        };
     } catch (error: any) {
         console.error("Error in handleResultesr:", error);
-        return NextResponse.json(
-            { status: "error", message: error.message },
-            { status: 500 }
-        );
+        throw new Error(error.message || "Failed to handle ESR result");
     }
 }

@@ -177,6 +177,12 @@ export async function handleResultOsmo(data: any) {
 
             analyzerOcrResultId = (insertOrcResult.outBinds as { out_id: any[] }).out_id[0];
 
+            //Update status and run date in request_det
+            await pool.execute(
+                "UPDATE request_det SET status = ?, run_date = ? WHERE request_det_id = ?",
+                ["TST", macData[0]?.collect_date, reqdetid]
+            );
+
             for (const detlist of requestdetlistData) {
 
                 const resultItemCode = detlist.result_item_code;

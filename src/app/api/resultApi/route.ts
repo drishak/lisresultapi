@@ -5,6 +5,9 @@ import { handleResultfbc } from "@/lib/hematology/resultfbc";
 import { handleResultesr } from "@/lib/hematology/resultesr";
 import { handleResultStago } from "@/lib/hematology/resultStago";
 import { handleResultOsmo } from "@/lib/patology/resultOsmo";
+import { handleResultUrit } from "@/lib/patology/resultUrit";
+import { handleResultSerbia } from "@/lib/patology/resultSerbia";
+import { handleResultBiosensor } from "@/lib/tissue/resultBiosensor";
 
 export async function POST(request: NextRequest) {
 
@@ -37,35 +40,32 @@ export async function POST(request: NextRequest) {
         for (const det of requestdetData) {
             let testCode = det.test_code;
 
-            // JOKOH
-            if (testCode === "HEMA32") {
-                const res = await handleResultesr(det);
-                results.push({ testCode, result: res });
-            }
+            try {
+                let res;
+                if (testCode === "HEMA32") res = await handleResultesr(det);
+                else if (["HEMA19", "HEMA20", "HEMA21", "HEMA22"].includes(testCode)) res = await handleResultfbc(det);
+                else if (["HEMA1", "HEMA2", "HEMA6", "HEMA8", "HEMA9", "HEMA27"].includes(testCode)) res = await handleResultStago(det);
+                else if (["UPK43", "UPK51"].includes(testCode)) res = await handleResultOsmo(det);
+                else if (testCode === "UPK69") res = await handleResultUrit(det);
+                else if (testCode === "UPK63") res = await handleResultSerbia(det);
+                else if (["UKT01"].includes(testCode)) res = await handleResultBiosensor(det);
 
-            // SYSMEX
-            else if (testCode === "HEMA19" || testCode === "HEMA20" || testCode === "HEMA21" || testCode === "HEMA22") {
-                const res = await handleResultfbc(det);
-                results.push({ testCode, result: res });
-            }
-            // STAGO
-            else if (testCode === "HEMA1" || testCode === "HEMA2" || testCode === "HEMA6" || testCode === "HEMA8" || testCode === "HEMA9" || testCode === "HEMA27") {
-                const res = await handleResultStago(det);
-                results.push({ testCode, result: res });
-            }
-            // OSMO
-            else if (testCode === "UPK43" || testCode === "UPK51") {
-                const res = await handleResultOsmo(det);
-                results.push({ testCode, result: res });
+                results.push({
+                    specimenId: specimenId,
+                    testCode: testCode,
+                    result: res,
+                    status: res?.status === "no_result" ? "no_result" : "success"
+                });
+            } catch (error: any) {
+                results.push({ testCode: testCode, error: error.message, status: "failed" });
             }
 
             return NextResponse.json(
-                { status: "success", message: "Results processed", data: results },
-                { status: 200 }
+                { status: results.every(r => r.status === "success") ? "success" : "partial", data: results },
+                { status: results.every(r => r.status === "success") ? 200 : 404 }
             );
+
         }
-
-
     } catch (error: any) {
         return NextResponse.json(
             { status: "error", message: error.message },
