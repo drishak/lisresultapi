@@ -3,7 +3,7 @@ import { pool } from "@/lib/db";
 import { getOracleConnection } from "@/lib/oracledb";
 import oracledb from "oracledb";
 
-export async function handleResultDiagcore(data: any) {
+export async function handleResultSebia(data: any) {
     let conn;
 
     try {
@@ -93,11 +93,6 @@ export async function handleResultDiagcore(data: any) {
                 if (rows.length > 0) {
                     macData = rows;
                     break; // stop looping
-                } else {
-                    return {
-                        status: "no_result",
-                        message: `No MAC data found for specimen_id : ${specimenId}`,
-                    }
                 }
             }
 
@@ -202,20 +197,56 @@ export async function handleResultDiagcore(data: any) {
                     [testCodeRef, specimenId]
                 );
 
-                let result = macInData[0][0]?.data_result;
-                console.log("Result:", testCodeRef, result);
+                if (macInData.length > 0) {
 
-                if (!result || result === undefined) {
-                    continue;
-                } else {
-                    if (result === 'POSITIVE') {
-                        result = 'DETECTED'
-                    } else if (result === 'NEGATIVE') {
-                        result = 'NOT DETECTED'
-                    }
+                    const [refProductData]: any = await pool.query(
+                        "SELECT * FROM ref_product WHERE result_item_code = ?",
+                        [testCodedet]
+                    );
+
+                    const rprRefProductId = refProductData[0]?.ref_product_id;
+
+                    row = await pool.query(
+                        `
+                            SELECT 
+                                verify_min_range,
+                                verify_max_range,
+                                range_uom_code
+                            FROM vw_product_ranges
+                            WHERE ref_product_id = ?
+                                AND rpr_ref_product_id = ?
+                                AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
+                                AND (? BETWEEN min_age_days AND max_age_days OR (min_age_days IS NULL AND max_age_days IS NULL))
+                            limit 1
+                            `,
+                        [refProductId, rprRefProductId, gender, gender, ageDays]
+                    );
+
+                    console.log("Condition Range:", refProductId, gender, ageDays);
+                    console.log("Range Data:", testCodeRef, refProductId, row);
                 }
 
-                console.log(" New Result:", testCodeRef, result);
+                const min = row[0][0]?.verify_min_range;
+                const max = row[0][0]?.verify_max_range;
+                const result = macInData[0][0]?.data_result;
+
+                const normalRange = (min != null && max != null) ? `${min} - ${max}` : null;
+                console.log("Normal Range:", normalRange);
+
+                let abnormality = null;
+                if (row.length > 0 && macInData.length > 0) {
+                    if (parseFloat(result) > parseFloat(min) && parseFloat(result) < parseFloat(max)) {
+                        abnormality = "Normal";
+                    } else if (parseFloat(result) > parseFloat(max)) {
+                        abnormality = "High";
+                    } else if (parseFloat(result) < parseFloat(min)) {
+                        abnormality = "Low";
+                    } else {
+                        abnormality = null;
+                    }
+                } else {
+                    abnormality = null;
+                }
 
                 await pool.query(
                     `INSERT INTO analyzer_result_det (
@@ -236,9 +267,9 @@ export async function handleResultDiagcore(data: any) {
                         detlist?.result_item_code,
                         detlist?.result_item_desc,
                         result,
-                        null,
-                        null,
-                        null
+                        normalRange,
+                        row[0][0]?.range_uom_code,
+                        abnormality
                     ]
                 );
 
@@ -267,9 +298,9 @@ export async function handleResultDiagcore(data: any) {
                         result_item_code: detlist?.result_item_code,
                         result_item_desc: detlist?.result_item_desc,
                         data_result: result,
-                        range: null,
-                        unit: null,
-                        abnormality: null,
+                        range: normalRange,
+                        unit: row[0][0]?.range_uom_code,
+                        abnormality: abnormality,
                         test_code: requestdetData[0]?.test_code,
                         test_desc: requestdetData[0]?.test_desc,
 
@@ -287,7 +318,7 @@ export async function handleResultDiagcore(data: any) {
             status: "success"
         };
     } catch (error: any) {
-        console.error("Error in handleResultDiagcore:", error);
-        throw new Error(error.message || "Failed to handle Diagcore result");
+        console.error("Error in handleResultSebia:", error);
+        throw new Error(error.message || "Failed to handle Sebia result");
     }
 }

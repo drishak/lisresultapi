@@ -270,7 +270,7 @@ export async function handleResultBiosensor(data: any) {
 
 
         return {
-            specimenId,
+            test_code: requestdetData[0]?.test_code,
             status: "success"
         };
     } catch (error: any) {

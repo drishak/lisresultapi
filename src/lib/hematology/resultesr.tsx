@@ -22,10 +22,7 @@ export async function handleResultesr(data: any) {
         let analyzerOcrResultId;
 
         if (!specimenId) {
-            return NextResponse.json(
-                { status: "error", message: "specimen_id is required" },
-                { status: 400 }
-            );
+            throw new Error("specimen_id is required");
         }
 
         const [requestData]: any = await pool.query(
@@ -324,7 +321,7 @@ export async function handleResultesr(data: any) {
 
 
         return {
-            specimenId,
+            test_code: requestdetData[0]?.test_code,
             status: "success"
         };
     } catch (error: any) {
