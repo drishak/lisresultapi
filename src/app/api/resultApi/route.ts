@@ -9,6 +9,8 @@ import { handleResultUrit } from "@/lib/patology/resultUrit";
 import { handleResultSebia } from "@/lib/patology/resultSebia";
 import { handleResultBiosensor } from "@/lib/tissue/resultBiosensor";
 import { handleResultDiagcore } from "@/lib/tissue/resultDiagcore";
+import { handleResultCobas } from "@/lib/endokrinologi/resultCobas";
+import { handleResultIds } from "@/lib/endokrinologi/resultIds";
 
 export async function POST(request: NextRequest) {
 
@@ -51,6 +53,8 @@ export async function POST(request: NextRequest) {
                 else if (testCode === "UPK63") res = await handleResultSebia(det);
                 else if (["UKT01"].includes(testCode)) res = await handleResultBiosensor(det);
                 else if (["UKT04", "UKT05"].includes(testCode)) res = await handleResultDiagcore(det);
+                else if (["ENDO3", "ENDO4", "ENDO5", "ENDO6", "ENDO8", "ENDO11", "ENDO13", "ENDO14"].includes(testCode)) res = await handleResultCobas(det);//Cobas
+                // else if (["ENDO1", "ENDO2", "ENDO7", "ENDO10"].includes(testCode)) res = await handleResultIds(det);//IDS
 
                 results.push({
                     specimenId: specimenId,
