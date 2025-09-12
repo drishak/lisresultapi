@@ -221,7 +221,7 @@ export async function handleResultCobas(data: any) {
                             FROM vw_product_ranges
                             WHERE ref_product_id = ?
                             AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
-                            AND ? BETWEEN min_age_days AND max_age_days
+                            AND (? BETWEEN min_age_days AND max_age_days OR (min_age_days IS NULL AND max_age_days IS NULL))
                             limit 1
                             `,
                         [refProductId, gender, gender, ageDays]

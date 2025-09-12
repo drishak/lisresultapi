@@ -221,8 +221,7 @@ export async function handleResultIds(data: any) {
                             FROM vw_product_ranges
                             WHERE ref_product_id = ?
                             AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
-                            AND ? BETWEEN min_age_days AND max_age_days
-                            limit 1
+                            AND (? BETWEEN min_age_days AND max_age_days OR (min_age_days IS NULL AND max_age_days IS NULL))
                             `,
                         [refProductId, gender, gender, ageDays]
                     );
@@ -233,29 +232,42 @@ export async function handleResultIds(data: any) {
                     // }
                 }
 
-                const min = row[0][0]?.verify_min_range;
-                const max = row[0][0]?.verify_max_range;
                 const result = macInData[0][0]?.data_result;
-
-                const normalRange = (min != null && max != null) ? `${min} - ${max}` : null;
-
                 let abnormality = null;
-                if (row.length > 0 && macInData.length > 0) {
-                    if (parseFloat(result) > parseFloat(min) && parseFloat(result) < parseFloat(max)) {
-                        abnormality = "Normal";
-                    } else if (parseFloat(result) > parseFloat(max)) {
-                        abnormality = "High";
-                    } else if (parseFloat(result) < parseFloat(min)) {
-                        abnormality = "Low";
+                let normalRange = null;
+
+                if (refProductId == '75' || refProductId == '73') {
+
+                    const minUp = row[0][0]?.verify_min_range;
+                    const maxUp = row[0][0]?.verify_max_range;
+                    const minSup = row[0][1]?.verify_min_range;
+                    const maxSup = row[0][1]?.verify_max_range;
+
+                    normalRange = `Upright: ${minUp} - ${maxUp}, Supine: ${minSup} - ${maxSup}`;
+
+                } else {
+                    const min = row[0][0]?.verify_min_range;
+                    const max = row[0][0]?.verify_max_range;
+
+                    normalRange = (min != null && max != null) ? `${min} - ${max}` : null;
+
+                    if (row.length > 0 && macInData.length > 0) {
+                        if (parseFloat(result) > parseFloat(min) && parseFloat(result) < parseFloat(max)) {
+                            abnormality = "Normal";
+                        } else if (parseFloat(result) > parseFloat(max)) {
+                            abnormality = "High";
+                        } else if (parseFloat(result) < parseFloat(min)) {
+                            abnormality = "Low";
+                        } else {
+                            abnormality = null;
+                        }
                     } else {
                         abnormality = null;
                     }
-                } else {
-                    abnormality = null;
+
                 }
 
-
-                console.log(" New Result:", testCodeRef, result);
+                console.log(" New Result:", testCodeRef, result, normalRange, abnormality);
 
                 await pool.query(
                     `INSERT INTO analyzer_result_det (
