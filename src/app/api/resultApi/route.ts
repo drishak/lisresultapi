@@ -11,9 +11,11 @@ import { handleResultBiosensor } from "@/lib/tissue/resultBiosensor";
 import { handleResultDiagcore } from "@/lib/tissue/resultDiagcore";
 import { handleResultCobas } from "@/lib/endokrinologi/resultCobas";
 import { handleResultIds } from "@/lib/endokrinologi/resultIds";
+import { handleResultAlinity } from "@/lib/patology/resultAlinity";
 
 export async function POST(request: NextRequest) {
 
+    const upkAlinityCodes = ["UPK249", "UPK248", "UPK246", "UPK247", "UPK61", "UPK94", "UPK93", "UPK39", "UPK89", "UPK79", "UPK32", "UPK129", "UPK134", "UPK29", "UPK132", "UPK133", "UPK37"];
 
     try {
         const item = await request.json();
@@ -55,6 +57,7 @@ export async function POST(request: NextRequest) {
                 else if (["UKT04", "UKT05"].includes(testCode)) res = await handleResultDiagcore(det);
                 else if (["ENDO3", "ENDO4", "ENDO5", "ENDO6", "ENDO8", "ENDO9", "ENDO11", "ENDO12", "ENDO13", "ENDO14"].includes(testCode)) res = await handleResultCobas(det);//Cobas
                 else if (["ENDO1", "ENDO2", "ENDO7", "ENDO10", "ENDO34", "ENDO35", "ENDO36", "ENDO37"].includes(testCode)) res = await handleResultIds(det);//IDS
+                else if (upkAlinityCodes.includes(testCode)) { res = await handleResultAlinity(det); }
 
                 results.push({
                     specimenId: specimenId,
@@ -62,6 +65,7 @@ export async function POST(request: NextRequest) {
                     result: res,
                     status: res?.status === "no_result" ? "no_result" : "success"
                 });
+
             } catch (error: any) {
                 results.push({ testCode: testCode, error: error.message, status: "failed" });
             }
