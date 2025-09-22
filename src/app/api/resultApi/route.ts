@@ -12,10 +12,13 @@ import { handleResultDiagcore } from "@/lib/tissue/resultDiagcore";
 import { handleResultCobas } from "@/lib/endokrinologi/resultCobas";
 import { handleResultIds } from "@/lib/endokrinologi/resultIds";
 import { handleResultAlinity } from "@/lib/patology/resultAlinity";
+import { handleResultStarmax } from "@/lib/hemostasis/resultStarmax";
+import { handleResultPhadia } from "@/lib/hemostasis/resultPhadia";
 
 export async function POST(request: NextRequest) {
 
     const upkAlinityCodes = ["UPK249", "UPK248", "UPK246", "UPK247", "UPK61", "UPK94", "UPK93", "UPK39", "UPK89", "UPK79", "UPK32", "UPK129", "UPK134", "UPK29", "UPK132", "UPK133", "UPK37"];
+    const uhkStarmaxCodes = ["UHK01", "UHK02", "UHK03", "UHK04", "UHK08", "UHK09", "UHK12", "UHK17", "UHK18", "UHK19", "UHK20", "UHK21"];
 
     try {
         const item = await request.json();
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
                 let res;
                 if (testCode === "HEMA32") res = await handleResultesr(det);
                 else if (["HEMA19", "HEMA20", "HEMA21", "HEMA22"].includes(testCode)) res = await handleResultfbc(det);
-                else if (["HEMA1", "HEMA2", "HEMA6", "HEMA8", "HEMA9", "HEMA27"].includes(testCode)) res = await handleResultStago(det);
+                else if (["HEMA1", "HEMA2", "HEMA6", "HEMA7", "HEMA8", "HEMA9", "HEMA27"].includes(testCode)) res = await handleResultStago(det);
                 else if (["UPK43", "UPK51"].includes(testCode)) res = await handleResultOsmo(det);
                 else if (testCode === "UPK69") res = await handleResultUrit(det);
                 else if (testCode === "UPK63") res = await handleResultSebia(det);
@@ -58,6 +61,8 @@ export async function POST(request: NextRequest) {
                 else if (["ENDO3", "ENDO4", "ENDO5", "ENDO6", "ENDO8", "ENDO9", "ENDO11", "ENDO12", "ENDO13", "ENDO14"].includes(testCode)) res = await handleResultCobas(det);//Cobas
                 else if (["ENDO1", "ENDO2", "ENDO7", "ENDO10", "ENDO34", "ENDO35", "ENDO36", "ENDO37"].includes(testCode)) res = await handleResultIds(det);//IDS
                 else if (upkAlinityCodes.includes(testCode)) { res = await handleResultAlinity(det); }
+                else if (uhkStarmaxCodes.includes(testCode)) { res = await handleResultStarmax(det); }
+                else if (["UHK13", "UHK14", "UHK15", "UHK16"].includes(testCode)) res = await handleResultPhadia(det);
 
                 results.push({
                     specimenId: specimenId,
