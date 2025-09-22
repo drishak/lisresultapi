@@ -115,89 +115,89 @@ export async function handleResultStarmax(data: any) {
                 }
             }
 
-            // const [insertResult]: any = await pool.query(
-            //     `INSERT INTO analyzer_result (
-            //             insert_date, 
-            //             insert_by, 
-            //             specimen_id, 
-            //             patient_id, 
-            //             patient_name, 
-            //             dob, 
-            //             gender, 
-            //             request_date, 
-            //             run_date, 
-            //             equipment_full_desc, 
-            //             request_id_lis,
-            //             transmit_by, 
-            //             read_flag
-            //     )
-            //          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            //     [
-            //         new Date(),
-            //         "SYSAPI",
-            //         specimenId,
-            //         patientData.length > 0 && patientData ? patientData[0]?.patient_id_no : null,
-            //         patientData.length > 0 && patientData ? patientData[0]?.full_name : null,
-            //         patientData.length > 0 && patientData ? patientData[0]?.birthdate : null,
-            //         patientData.length > 0 && patientData ? patientData[0]?.gender : null,
-            //         requestData.length > 0 && requestData ? requestData[0]?.request_date : null,
-            //         macData[0]?.collect_date,
-            //         macData[0]?.equipment_full_desc,
-            //         requestData.length > 0 && requestData ? requestData[0]?.request_id_lis : null,
-            //         macData[0]?.transmit_by,
-            //         "1"
-            //     ]
-            // );
+            const [insertResult]: any = await pool.query(
+                `INSERT INTO analyzer_result (
+                        insert_date, 
+                        insert_by, 
+                        specimen_id, 
+                        patient_id, 
+                        patient_name, 
+                        dob, 
+                        gender, 
+                        request_date, 
+                        run_date, 
+                        equipment_full_desc, 
+                        request_id_lis,
+                        transmit_by, 
+                        read_flag
+                )
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    new Date(),
+                    "SYSAPI",
+                    specimenId,
+                    patientData.length > 0 && patientData ? patientData[0]?.patient_id_no : null,
+                    patientData.length > 0 && patientData ? patientData[0]?.full_name : null,
+                    patientData.length > 0 && patientData ? patientData[0]?.birthdate : null,
+                    patientData.length > 0 && patientData ? patientData[0]?.gender : null,
+                    requestData.length > 0 && requestData ? requestData[0]?.request_date : null,
+                    macData[0]?.collect_date,
+                    macData[0]?.equipment_full_desc,
+                    requestData.length > 0 && requestData ? requestData[0]?.request_id_lis : null,
+                    macData[0]?.transmit_by,
+                    "1"
+                ]
+            );
 
-            // analyzerResultId = insertResult.insertId;
+            analyzerResultId = insertResult.insertId;
 
-            // const insertOrcResult = await conn.execute(
-            //     `INSERT INTO MID002ANALYZER_RESULT 
-            //             (ANALYZER_RESULT_ID, insert_date, insert_by, specimen_id, patient_id, patient_name, dob, sex, request_date, run_date, equipment_full_desc, request_id_lis, transmit_by, read_flag)
-            //         VALUES (
-            //             ANALYZER_RESULT_SEQ.NEXTVAL,
-            //             :insert_date, 
-            //             :insert_by, 
-            //             :specimen_id, 
-            //             :patient_id, 
-            //             :patient_name, 
-            //             :dob, 
-            //             :sex, 
-            //             :request_date, 
-            //             :run_date, 
-            //             :equipment_full_desc, 
-            //             :request_id_lis, 
-            //             :transmit_by, 
-            //             :read_flag
-            //         )
-            //         RETURNING ANALYZER_RESULT_ID INTO :out_id`,
-            //     {
-            //         insert_date: new Date(),
-            //         insert_by: "SYSAPI",
-            //         specimen_id: specimenId,
-            //         patient_id: patientData.length > 0 && patientData ? patientData[0]?.patient_id_no : null,
-            //         patient_name: patientData.length > 0 && patientData ? patientData[0]?.full_name : null,
-            //         dob: patientData.length > 0 && patientData ? patientData[0]?.birthdate : null,
-            //         sex: patientData.length > 0 && patientData ? patientData[0]?.gender : null,
-            //         request_date: requestData.length > 0 && requestData ? requestData[0]?.request_date : null,
-            //         run_date: macData[0]?.collect_date,
-            //         equipment_full_desc: macData[0]?.equipment_full_desc,
-            //         request_id_lis: requestData.length > 0 && requestData ? requestData[0]?.request_id_lis : null,
-            //         transmit_by: "SYSAPI",
-            //         read_flag: "1",
+            const insertOrcResult = await conn.execute(
+                `INSERT INTO MID002ANALYZER_RESULT 
+                        (ANALYZER_RESULT_ID, insert_date, insert_by, specimen_id, patient_id, patient_name, dob, sex, request_date, run_date, equipment_full_desc, request_id_lis, transmit_by, read_flag)
+                    VALUES (
+                        ANALYZER_RESULT_SEQ.NEXTVAL,
+                        :insert_date, 
+                        :insert_by, 
+                        :specimen_id, 
+                        :patient_id, 
+                        :patient_name, 
+                        :dob, 
+                        :sex, 
+                        :request_date, 
+                        :run_date, 
+                        :equipment_full_desc, 
+                        :request_id_lis, 
+                        :transmit_by, 
+                        :read_flag
+                    )
+                    RETURNING ANALYZER_RESULT_ID INTO :out_id`,
+                {
+                    insert_date: new Date(),
+                    insert_by: "SYSAPI",
+                    specimen_id: specimenId,
+                    patient_id: patientData.length > 0 && patientData ? patientData[0]?.patient_id_no : null,
+                    patient_name: patientData.length > 0 && patientData ? patientData[0]?.full_name : null,
+                    dob: patientData.length > 0 && patientData ? patientData[0]?.birthdate : null,
+                    sex: patientData.length > 0 && patientData ? patientData[0]?.gender : null,
+                    request_date: requestData.length > 0 && requestData ? requestData[0]?.request_date : null,
+                    run_date: macData[0]?.collect_date,
+                    equipment_full_desc: macData[0]?.equipment_full_desc,
+                    request_id_lis: requestData.length > 0 && requestData ? requestData[0]?.request_id_lis : null,
+                    transmit_by: "SYSAPI",
+                    read_flag: "1",
 
-            //         out_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-            //     },
-            //     { autoCommit: true }
-            // );
+                    out_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+                },
+                { autoCommit: true }
+            );
 
-            // analyzerOcrResultId = (insertOrcResult.outBinds as { out_id: any[] }).out_id[0];
+            analyzerOcrResultId = (insertOrcResult.outBinds as { out_id: any[] }).out_id[0];
 
-            // //Update status and run date in request_det
-            // await pool.execute(
-            //     "UPDATE request_det SET status = ?, run_date = ? WHERE request_det_id = ?",
-            //     ["TST", macData[0]?.collect_date, reqdetid]
-            // );
+            //Update status and run date in request_det
+            await pool.execute(
+                "UPDATE request_det SET status = ?, run_date = ? WHERE request_det_id = ?",
+                ["TST", macData[0]?.collect_date, reqdetid]
+            );
 
             for (const detlist of requestdetlistData) {
 
@@ -295,66 +295,66 @@ export async function handleResultStarmax(data: any) {
                 }
                 console.log("Abnormality:", abnormality);
 
-                // await pool.query(
-                //     `INSERT INTO analyzer_result_det (
-                //         analyzer_result_id, 
-                //         result_item_id, 
-                //         result_item_code, 
-                //         result_item_desc, 
-                //         data_result, 
-                //         normal_range, 
-                //         unit, 
-                //         abnormality
-                //         ) 
-                //     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                //     `,
-                //     [
-                //         analyzerResultId,
-                //         detlist?.result_item_id,
-                //         detlist?.result_item_code,
-                //         detlist?.result_item_desc,
-                //         result,
-                //         normalRange,
-                //         row[0][0]?.range_uom_code,
-                //         abnormality
-                //     ]
-                // );
+                await pool.query(
+                    `INSERT INTO analyzer_result_det (
+                        analyzer_result_id, 
+                        result_item_id, 
+                        result_item_code, 
+                        result_item_desc, 
+                        data_result, 
+                        normal_range, 
+                        unit, 
+                        abnormality
+                        ) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    `,
+                    [
+                        analyzerResultId,
+                        detlist?.result_item_id,
+                        detlist?.result_item_code,
+                        detlist?.result_item_desc,
+                        result,
+                        normalRange,
+                        row[0][0]?.range_uom_code,
+                        abnormality
+                    ]
+                );
 
-                // await conn.execute(
-                //     `INSERT INTO MID003ANALYZER_RESULT_DET 
-                //                             (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
-                //                         VALUES (
+                await conn.execute(
+                    `INSERT INTO MID003ANALYZER_RESULT_DET 
+                                            (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
+                                        VALUES (
 
-                //                         ANALYZER_RESULT_DET_SEQ.NEXTVAL,
-                //                         :analyzer_result_id, 
-                //                         :result_item_id,
-                //                         :result_item_code, 
-                //                         :result_item_desc, 
-                //                         :data_result, 
-                //                         :range, 
-                //                         :unit, 
-                //                         :abnormality, 
-                //                         :test_code,
-                //                         :test_desc
-                //                         )
-                //                         RETURNING ANALYZER_RESULT_DET_ID INTO :out_id`,
-                //     {
+                                        ANALYZER_RESULT_DET_SEQ.NEXTVAL,
+                                        :analyzer_result_id, 
+                                        :result_item_id,
+                                        :result_item_code, 
+                                        :result_item_desc, 
+                                        :data_result, 
+                                        :range, 
+                                        :unit, 
+                                        :abnormality, 
+                                        :test_code,
+                                        :test_desc
+                                        )
+                                        RETURNING ANALYZER_RESULT_DET_ID INTO :out_id`,
+                    {
 
-                //         analyzer_result_id: analyzerOcrResultId,
-                //         result_item_id: detlist?.result_item_id,
-                //         result_item_code: detlist?.result_item_code,
-                //         result_item_desc: detlist?.result_item_desc,
-                //         data_result: result,
-                //         range: normalRange,
-                //         unit: row[0][0]?.range_uom_code,
-                //         abnormality: abnormality,
-                //         test_code: requestdetData[0]?.test_code,
-                //         test_desc: requestdetData[0]?.test_desc,
+                        analyzer_result_id: analyzerOcrResultId,
+                        result_item_id: detlist?.result_item_id,
+                        result_item_code: detlist?.result_item_code,
+                        result_item_desc: detlist?.result_item_desc,
+                        data_result: result,
+                        range: normalRange,
+                        unit: row[0][0]?.range_uom_code,
+                        abnormality: abnormality,
+                        test_code: requestdetData[0]?.test_code,
+                        test_desc: requestdetData[0]?.test_desc,
 
-                //         out_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
-                //     },
-                //     { autoCommit: true }
-                // );
+                        out_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+                    },
+                    { autoCommit: true }
+                );
             }
 
         }
