@@ -77,47 +77,43 @@ export async function handleResultStago(data: any) {
 
                 let resultItemCode = det.result_item_code;
                 let resultItemDesc = det.result_item_desc;
+
                 let testCodeRef = null;
 
-                if (!resultItemDesc) {
-                    continue;
+                if (["FIBR", "TT", "APTT", "APTTP", "PT", "DDI", "INR"].includes(resultItemCode)) {
+
+                    if (resultItemCode === "FIBR") testCodeRef = "21";
+                    else if (resultItemCode === "TT") testCodeRef = "36";
+                    else if (resultItemCode === "APTT" || resultItemCode === "APTTP") testCodeRef = "6";
+                    else if (resultItemCode === "PT") testCodeRef = "3";
+                    else if (resultItemCode === "DDI") testCodeRef = "26";
+                    else if (resultItemCode === "INR") testCodeRef = "2";
+
                 } else {
-                    if (resultItemDesc === "Prothrombin Time") {
-                        testCodeRef = "PTs"
-                    } else if (resultItemDesc === "Activated Partial Thromboplastin Time") {
-                        testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "Disseminated Intravascular Coagulation") {
-                        // testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "Thrombin Time") {
-                        // testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "Fibrinogen") {
-                        // testCodeRef = "PTTAAUTOs"
-                    } else if (resultItemDesc === "D-Dimer") {
-                        // testCodeRef = "PTTAAUTOs"
-                    }
+
+                    const [refProductData]: any = await pool.query(
+                        "SELECT * FROM ref_product WHERE result_item_code = ?",
+                        [resultItemCode]
+                    );
+
+                    testCodeRef = refProductData[0]?.test_code;
                 }
 
-                // get ref product
-                // const [refProductData]: any = await pool.query(
-                //     "SELECT * FROM ref_product WHERE result_item_code = ?",
-                //     [resultItemCode]
-                // );
+                if (testCodeRef) {
+                    // get mac data
+                    const [rows]: any = await pool.query(
+                        "SELECT * FROM mac_tempres_in WHERE analyzer_test_id = ? AND specimen_id = ? AND read_flag = 0 LIMIT 1",
+                        [testCodeRef, specimenId]
+                    );
 
-                // const testCodeRef = refProductData[0]?.test_code;
-
-                // get mac data
-                const [rows]: any = await pool.query(
-                    "SELECT * FROM mac_tempres_in WHERE analyzer_test_id = ? AND specimen_id = ? AND read_flag = 0 LIMIT 1",
-                    [testCodeRef, specimenId]
-                );
-
-                if (rows.length > 0) {
-                    macData = rows;
-                    break; // stop looping
-                } else {
-                    return {
-                        status: "no_result",
-                        message: `No MAC data found for specimen_id : ${specimenId}`,
+                    if (rows.length > 0) {
+                        macData = rows;
+                        break; // stop looping
+                    } else {
+                        return {
+                            status: "no_result",
+                            message: `No MAC data found for specimen_id : ${specimenId}`,
+                        }
                     }
                 }
             }
@@ -208,26 +204,32 @@ export async function handleResultStago(data: any) {
 
             for (const detlist of requestdetlistData) {
 
-                let resultItemCode = null;
+                let resultItemCode = detlist.result_item_code;
                 let resultItemDesc = detlist.result_item_desc;
 
-                if (!resultItemDesc) {
-                    continue;
+                let testCodeRef = null;
+                let refProductId = null;
+
+                if (["FIBR", "TT", "APTT", "APTTP", "PT", "DDI", "INR"].includes(resultItemCode)) {
+
+                    if (resultItemCode === "FIBR") testCodeRef = "21", refProductId = '637';
+                    else if (resultItemCode === "TT") testCodeRef = "36", refProductId = '639';
+                    else if (resultItemCode === "APTT" || resultItemCode === "APTTP") testCodeRef = "6", refProductId = '633';
+                    else if (resultItemCode === "PT") testCodeRef = "3", refProductId = '634';
+                    else if (resultItemCode === "DDI") testCodeRef = "26", refProductId = '638';
+                    else if (resultItemCode === "INR") testCodeRef = "2", refProductId = '635';
+
                 } else {
-                    if (resultItemDesc === "Prothrombin Time") {
-                        resultItemCode = "PT2"
-                    } else if (resultItemDesc === "Activated Partial Thromboplastin Time") {
-                        resultItemCode = "APTT2"
-                    }
+
+                    const [refProductData]: any = await pool.query(
+                        "SELECT * FROM ref_product WHERE result_item_code = ?",
+                        [resultItemCode]
+                    );
+
+                    testCodeRef = refProductData[0]?.test_code;
+                    refProductId = refProductData[0]?.ref_product_id;
                 }
 
-                const [refProductData]: any = await pool.query(
-                    "SELECT * FROM ref_product WHERE result_item_code = ?",
-                    [resultItemCode]
-                );
-
-                const testCodeRef = refProductData[0]?.test_code;
-                const refProductId = refProductData[0]?.ref_product_id;
 
                 macInData = await pool.query(
                     "SELECT * FROM mac_tempres_in WHERE analyzer_test_id = ? and specimen_id = ? and read_flag = 0 limit 1",
@@ -236,29 +238,38 @@ export async function handleResultStago(data: any) {
 
                 if (macInData.length > 0) {
 
-                    // const [refProductData]: any = await pool.query(
-                    //     "SELECT * FROM ref_product WHERE result_item_code = ?",
-                    //     [testCodedet]
-                    // );
+                    let rprRefProductId = null;
 
-                    // const rprRefProductId = refProductData[0].ref_product_id;
+                    if (["HEMA1", "HEMA2", "HEMA8", "HEMA9"].includes(testCodedet)) {
+
+                        rprRefProductId = refProductId;
+
+                    } else {
+
+                        const [refProductData]: any = await pool.query(
+                            "SELECT * FROM ref_product WHERE result_item_code = ?",
+                            [testCodedet]
+                        );
+
+                        rprRefProductId = refProductData[0].ref_product_id;
+
+                    }
 
                     row = await pool.query(
                         `
-                            SELECT verify_min_range,
+                            SELECT 
+                                verify_min_range,
                                 verify_max_range,
                                 range_uom_code
                             FROM vw_product_ranges
                             WHERE ref_product_id = ?
-                            AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
+                                AND rpr_ref_product_id = ?
+                                AND (? IS NULL OR gender_code = ? OR gender_code IS NULL)
+                                AND (? BETWEEN min_age_days AND max_age_days OR (min_age_days IS NULL AND max_age_days IS NULL))
                             limit 1
                             `,
-                        [refProductId, gender, gender, ageDays]
+                        [refProductId, rprRefProductId, gender, gender, ageDays]
                     );
-
-                    console.log("Condition Range:", refProductId, gender, ageDays);
-                    console.log("Range Data:", testCodeRef, refProductId, row);
-
                 }
 
                 const min = row[0][0]?.verify_min_range;
@@ -282,7 +293,7 @@ export async function handleResultStago(data: any) {
                     abnormality = null;
                 }
 
-
+                console.log("Result Interpretation:", specimenId, resultItemDesc, result, normalRange, abnormality);
 
                 await pool.query(
                     `INSERT INTO analyzer_result_det (
@@ -313,7 +324,7 @@ export async function handleResultStago(data: any) {
                     `INSERT INTO MID003ANALYZER_RESULT_DET 
                         (ANALYZER_RESULT_DET_ID, analyzer_result_id, result_item_id, result_item_code, result_item_desc, data_result, range, unit, abnormality, test_code, test_desc) 
                     VALUES (
-                                
+
                         ANALYZER_RESULT_DET_SEQ.NEXTVAL,
                         :analyzer_result_id,
                         :result_item_id,
