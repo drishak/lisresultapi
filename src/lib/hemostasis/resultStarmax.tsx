@@ -78,14 +78,16 @@ export async function handleResultStarmax(data: any) {
                 const resultItemCode = det.result_item_code;
 
                 // get ref product
+                console.log("Result Item Code:", resultItemCode);
 
 
-                if (["FBG", "TT2", "APTT2", "PT2"].includes(resultItemCode)) {
+                if (["FBG", "TT2", "APTT2", "PT2", "F8 VWD"].includes(resultItemCode)) {
 
                     if (resultItemCode === "FBG") testCodeRef = "21";
                     else if (resultItemCode === "TT2") testCodeRef = "36";
                     else if (resultItemCode === "APTT2") testCodeRef = "6";
                     else if (resultItemCode === "PT2") testCodeRef = "3";
+                    else if (resultItemCode === "F8 VWD") testCodeRef = "76";
 
                 } else {
 
@@ -97,20 +99,21 @@ export async function handleResultStarmax(data: any) {
                     testCodeRef = refProductData[0]?.test_code;
                 }
 
+                if (testCodeRef && testCodeRef !== "" && testCodeRef !== 'NULL') {
+                    // get mac data
+                    const [rows]: any = await pool.query(
+                        "SELECT * FROM mac_tempres_in WHERE analyzer_test_id = ? AND specimen_id = ? AND read_flag = 0 LIMIT 1",
+                        [testCodeRef, specimenId]
+                    );
 
-                // get mac data
-                const [rows]: any = await pool.query(
-                    "SELECT * FROM mac_tempres_in WHERE analyzer_test_id = ? AND specimen_id = ? AND read_flag = 0 LIMIT 1",
-                    [testCodeRef, specimenId]
-                );
-
-                if (rows.length > 0) {
-                    macData = rows;
-                    break; // stop looping
-                } else {
-                    return {
-                        status: "no_result",
-                        message: `No MAC data found for specimen_id : ${specimenId}`,
+                    if (rows.length > 0) {
+                        macData = rows;
+                        break; // stop looping
+                    } else {
+                        return {
+                            status: "no_result",
+                            message: `No MAC data found for specimen_id : ${specimenId}`,
+                        }
                     }
                 }
             }
@@ -208,12 +211,14 @@ export async function handleResultStarmax(data: any) {
                     [resultItemCode]
                 );
 
-                if (["FBG", "TT2", "APTT2", "PT2"].includes(resultItemCode)) {
+                let refProductId;
+                if (["FBG", "TT2", "APTT2", "PT2", "F8 VWD"].includes(resultItemCode)) {
 
-                    if (resultItemCode === "FBG") testCodeRef = "21";
-                    else if (resultItemCode === "TT2") testCodeRef = "36";
-                    else if (resultItemCode === "APTT2") testCodeRef = "6";
-                    else if (resultItemCode === "PT2") testCodeRef = "3";
+                    if (resultItemCode === "FBG") testCodeRef = "21", refProductId = "637";
+                    else if (resultItemCode === "TT2") testCodeRef = "36", refProductId = "639";
+                    else if (resultItemCode === "APTT2") testCodeRef = "6", refProductId = "633";
+                    else if (resultItemCode === "PT2") testCodeRef = "3", refProductId = "634";
+                    else if (resultItemCode === "F8 VWD") testCodeRef = "76", refProductId = "1125";
 
                 } else {
 
@@ -223,9 +228,10 @@ export async function handleResultStarmax(data: any) {
                     );
 
                     testCodeRef = refProductData[0]?.test_code;
+                    refProductId = refProductData[0]?.ref_product_id;
                 }
 
-                const refProductId = refProductData[0]?.ref_product_id;
+
 
                 macInData = await pool.query(
                     "SELECT * FROM mac_tempres_in WHERE analyzer_test_id = ? and specimen_id = ? and read_flag = 0 limit 1",
@@ -249,14 +255,13 @@ export async function handleResultStarmax(data: any) {
                         rprRefProductId = refProductData[0]?.ref_product_id;
                     }
 
-
-
                     row = await pool.query(
                         `
                             SELECT 
                                 verify_min_range,
                                 verify_max_range,
-                                range_uom_code
+                                range_uom_code,
+                                verify_range_cond
                             FROM vw_product_ranges
                             WHERE ref_product_id = ?
                                 AND rpr_ref_product_id = ?
@@ -267,16 +272,25 @@ export async function handleResultStarmax(data: any) {
                         [refProductId, rprRefProductId, gender, gender, ageDays]
                     );
 
-                    console.log("Condition Range:", refProductId, gender, ageDays);
+                    console.log("Condition Range:", refProductId, rprRefProductId, gender, ageDays);
                     console.log("Range Data:", testCodeRef, refProductId, row);
                 }
 
                 const min = row[0][0]?.verify_min_range;
                 const max = row[0][0]?.verify_max_range;
+
                 const result = macInData[0][0]?.data_result;
+                let normalRange = null;
                 console.log("Result:", result);
 
-                const normalRange = (min != null && max != null) ? `${min} - ${max}` : null;
+                if (["666", "663", "657", "649", "655", "647", "1392"].includes(String(refProductId))) {
+                    const symbol = row[0][0]?.verify_range_cond
+                    normalRange = symbol ? `${symbol} ${max}` : null;
+                    // Example: "≤ 1.54"
+                } else {
+                    normalRange = (min != null && max != null) ? `${min} - ${max}` : null;
+                }
+
                 console.log("Normal Range:", normalRange);
 
                 let abnormality = null;

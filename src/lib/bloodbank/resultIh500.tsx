@@ -4,7 +4,50 @@ import { getOracleConnection } from "@/lib/oracledb";
 import oracledb from "oracledb";
 
 export async function handleResultIh500(data: any) {
+
+    // const idctMap: Record<string, string> = {
+    //     "Anti Compliment C3d": "",
+    //     "Anti Compliment C3c": "",
+    //     "Anti Ig-A": "AntiIgA",
+    //     "Anti Ig-M": "AntiIgM",
+    //     "Anti Ig-G": "AntiIgG",
+    // };
+
+    // const aborhMap: Record<string, string> = {
+    //     "Cell-O": "cellO",
+    //     "Cell-B": "cellB",
+    //     "Cell-A1": "cellA1",
+    //     "Cell-A": "cellA",
+    //     "Anti-H": "AntiH",
+    //     "Anti-D": "AntiD",
+    //     "Anti-AB": "CtrlAB",
+    //     "Anti-B": "AntiB",
+    //     "Anti-A": "AntiA",
+    // };
+
+
+
     let conn;
+
+    const idctMap: Record<string, { testCodeRef: string; refProductId: string }> = {
+        "Anti Compliment C3d": { testCodeRef: "", refProductId: "1463" },
+        "Anti Compliment C3c": { testCodeRef: "", refProductId: "1464" },
+        "Anti Ig-A": { testCodeRef: "AntiIgA", refProductId: "1468" },
+        "Anti Ig-M": { testCodeRef: "AntiIgM", refProductId: "1465" },
+        "Anti Ig-G": { testCodeRef: "AntiIgG", refProductId: "1468" },
+    };
+
+    const aborhMap: Record<string, { testCodeRef: string; refProductId: string }> = {
+        "Cell-O": { testCodeRef: "cellO", refProductId: "1455" },
+        "Cell-B": { testCodeRef: "cellB", refProductId: "1456" },
+        "Cell-A1": { testCodeRef: "cellA1", refProductId: "1457" },
+        "Cell-A": { testCodeRef: "cellA", refProductId: "1458" },
+        "Anti-H": { testCodeRef: "AntiH", refProductId: "1469" },
+        "Anti-D": { testCodeRef: "AntiD", refProductId: "1462" },
+        "Anti-AB": { testCodeRef: "CtrlAB", refProductId: "1461" },
+        "Anti-B": { testCodeRef: "AntiB", refProductId: "1460" },
+        "Anti-A": { testCodeRef: "AntiA", refProductId: "1459" },
+    };
 
     try {
 
@@ -78,31 +121,38 @@ export async function handleResultIh500(data: any) {
                 const resultItemDesc = det.result_item_desc;
                 let testCodeRef = null;
 
-                if (["IDCT"].includes(resultItemCode)) {
-
-                    if (resultItemDesc === "Anti Compliment C3d") testCodeRef = "";
-                    else if (resultItemDesc === "Anti Compliment C3c") testCodeRef = "";
-                    else if (resultItemDesc === "Anti Ig-A") testCodeRef = "";
-                    else if (resultItemDesc === "Anti Ig-M") testCodeRef = "";
-                    else if (resultItemDesc === "Anti Ig-G") testCodeRef = "";
-
-                } else {
-                    // get ref product
-                    const [refProductData]: any = await pool.query(
-                        "SELECT * FROM ref_product WHERE result_item_code = ?",
-                        [resultItemCode]
-                    );
-
-                    testCodeRef = refProductData[0]?.test_code;
+                if (testCodedet === "BB13" || testCodedet === "BB15") {
+                    if (resultItemCode === "IDCT") {
+                        const mapping = idctMap[resultItemDesc];
+                        if (mapping) {
+                            testCodeRef = mapping.testCodeRef || null;
+                        }
+                    } else if (testCodedet === "BB15" && resultItemCode === "ABORH") {
+                        const mapping = aborhMap[resultItemDesc];
+                        if (mapping) {
+                            testCodeRef = mapping.testCodeRef || null;
+                        }
+                    } else {
+                        // get ref product from DB
+                        const [refProductData]: any = await pool.query(
+                            "SELECT * FROM ref_product WHERE result_item_code = ?",
+                            [resultItemCode]
+                        );
+                        testCodeRef = refProductData[0]?.test_code || null;
+                    }
                 }
 
-                if (testCodeRef) {
+                console.log("Test Code Ref:", testCodeRef);
+
+                if (testCodeRef && testCodeRef !== "" && testCodeRef !== 'NULL') {
+
                     // get mac data
                     const [rows]: any = await pool.query(
                         "SELECT * FROM mac_tempres_in WHERE analyzer_test_id = ? AND specimen_id = ? AND read_flag = 0 LIMIT 1",
                         [testCodeRef, specimenId]
                     );
 
+                    console.log("Test Code Ref:", testCodeRef, specimenId, rows);
                     if (rows.length > 0) {
                         macData = rows;
                         break; // stop looping
@@ -208,24 +258,29 @@ export async function handleResultIh500(data: any) {
                 let testCodeRef = null;
                 let refProductId = null;
 
-                if (["IDCT"].includes(resultItemCode)) {
+                if (testCodedet === "BB13" || testCodedet === "BB15") {
+                    if (resultItemCode === "IDCT") {
+                        const mapping = idctMap[resultItemDesc];
+                        if (mapping) {
+                            testCodeRef = mapping.testCodeRef;
+                            refProductId = mapping.refProductId;
+                        }
+                    } else if (testCodedet === "BB15" && resultItemCode === "ABORH") {
+                        const mapping = aborhMap[resultItemDesc];
+                        if (mapping) {
+                            testCodeRef = mapping.testCodeRef;
+                            refProductId = mapping.refProductId;
+                        }
+                    } else {
 
-                    if (resultItemDesc === "Anti Compliment C3d") testCodeRef = "", refProductId = "1463";
-                    else if (resultItemDesc === "Anti Compliment C3c") testCodeRef = "", refProductId = "1464";
-                    else if (resultItemDesc === "Anti Ig-A") testCodeRef = "", refProductId = "1468";
-                    else if (resultItemDesc === "Anti Ig-M") testCodeRef = "", refProductId = "1465";
-                    else if (resultItemDesc === "Anti Ig-G") testCodeRef = "", refProductId = "1468";
+                        const [refProductData]: any = await pool.query(
+                            "SELECT * FROM ref_product WHERE result_item_code = ?",
+                            [resultItemCode]
+                        );
 
-                } else {
-
-                    const [refProductData]: any = await pool.query(
-                        "SELECT * FROM ref_product WHERE result_item_code = ?",
-                        [resultItemCode]
-                    );
-
-                    testCodeRef = refProductData[0]?.test_code;
-                    refProductId = refProductData[0]?.ref_product_id;
-
+                        testCodeRef = refProductData[0]?.test_code;
+                        refProductId = refProductData[0]?.ref_product_id;
+                    }
                 }
 
                 macInData = await pool.query(

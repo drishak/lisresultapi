@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
                 else if (upkAlinityCodes.includes(testCode)) { res = await handleResultAlinity(det); }
                 else if (uhkStarmaxCodes.includes(testCode)) { res = await handleResultStarmax(det); }
                 else if (["UHK13", "UHK14", "UHK15", "UHK16"].includes(testCode)) res = await handleResultPhadia(det);
-                else if (["BB13"].includes(testCode)) res = await handleResultIh500(det);
+                else if (["BB13", "BB15"].includes(testCode)) res = await handleResultIh500(det);
 
                 results.push({
                     specimenId: specimenId,
