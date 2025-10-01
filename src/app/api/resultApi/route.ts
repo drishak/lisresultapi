@@ -15,6 +15,7 @@ import { handleResultAlinity } from "@/lib/patology/resultAlinity";
 import { handleResultStarmax } from "@/lib/hemostasis/resultStarmax";
 import { handleResultPhadia } from "@/lib/hemostasis/resultPhadia";
 import { handleResultIh500 } from "@/lib/bloodbank/resultIh500";
+import { handleResultBactec } from "@/lib/bacterio/resultBactec";
 
 export async function POST(request: NextRequest) {
 
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
                 else if (uhkStarmaxCodes.includes(testCode)) { res = await handleResultStarmax(det); }
                 else if (["UHK13", "UHK14", "UHK15", "UHK16"].includes(testCode)) res = await handleResultPhadia(det);
                 else if (["BB13", "BB15"].includes(testCode)) res = await handleResultIh500(det);
+                else if (["MB45", "MB46", "MB47", "MB48", "MB49", "MB52", "MB53", "MB54", "MB55"].includes(testCode)) res = await handleResultBactec(det);
 
                 results.push({
                     specimenId: specimenId,
